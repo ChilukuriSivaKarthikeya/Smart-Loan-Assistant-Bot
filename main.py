@@ -12,8 +12,8 @@ AMOUNT, BANK, LOAN_TYPE, INTEREST_RATE, DURATION, EMI_CALC = range(6)
 
 # Bank Data
 BANKS = {
-    "State Bank": {"Home Loan": 8.25, "Personal Loan": 11.45, "Car Loan": 9.0},
-    "Union Bank": {"Home Loan": 8.1, "Personal Loan": 11.15, "Car Loan": 8.5},
+    "State Bank": {"Home Loan": 8.25, "Personal Loan": 11.45, "Car Loan": 9.0,"Gold Loan" :9.0,"Education Loan" : 8.05},
+    "Union Bank": {"Home Loan": 8.1, "Personal Loan": 11.15, "Car Loan": 8.5,"Gold Loan" :9.95,"Education Loan" : 10},
     "Canara Bank": {"Home Loan": 8.25, "Personal Loan": 10.7, "Car Loan": 9.0, "Gold Loan": 9.0, "Education Loan": 9.25},
     "ICIC Bank": {"Home Loan": 8.75, "Personal Loan": 10.85, "Car Loan": 8.5, "Gold Loan": 9.25, "Education Loan": 8.30},
     "Axis Bank": {"Home Loan": 8.75, "Personal Loan": 11.10, "Car Loan": 9.0, "Gold Loan": 17.0, "Education Loan": 9.25},
@@ -29,9 +29,17 @@ app = FastAPI()
 telegram_app = Application.builder().token(BOT_TOKEN).build()
 
 # ---------------- Handlers ---------------- #
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Welcome! Enter loan amount:")
+    if update.callback_query:
+        await update.callback_query.answer()
+        await update.callback_query.message.reply_text(
+            "Welcome! Enter loan amount:"
+        )
+    else:
+        await update.message.reply_text(
+            "Welcome! Enter loan amount:"
+        )
+
     return AMOUNT
 
 async def amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -101,10 +109,10 @@ async def duration(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['duration'] = years
 
-    keyboard = [["Yes", "No"]]
+    keyboard = [["EMI","Only Interest", "Total Payable"]]
 
     await update.message.reply_text(
-        "Do you want to calculate EMI?",
+        "Please Select Option to Calculate",
         reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     )
 
@@ -117,7 +125,7 @@ async def emi_calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
     years = context.user_data['duration']
     months = years * 12
 
-    if choice == "Yes":
+    if choice == "EMI":
         if rate == 0:
             emi = amount / months
         else:
@@ -126,15 +134,19 @@ async def emi_calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"Your EMI will be: ₹{emi:.2f} per month for {years} years."
         )
-
+    elif choice="Only Interest":
+        interest_only = amount * (rate / 100)
+        await update.message.reply_text(
+        f"Yearly Interest Amount: ₹{interest_only:.2f}"
+    )
     else:
-        total_payable = amount * (1 + (context.user_data['interest_rate'] / 100) * years)
+        total_payable = amount * (1 + (rate / 100) * years)
 
         await update.message.reply_text(
             f"Total payable amount after {years} years: ₹{total_payable:.2f}"
         )
 
-    keyboard = [[InlineKeyboardButton("🚀 Calculate Another Loan", callback_data="start")]]
+    keyboard = [[InlineKeyboardButton("🚀 Calculate Another Loan", callback_data="restart")]]
 
     await update.message.reply_text(
         "Would you like to check another loan?",
@@ -150,7 +162,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ---------------- Conversation ---------------- #
 
 conv_handler = ConversationHandler(
-    entry_points=[CommandHandler("start", start)],
+    entry_points=[CommandHandler("start", start),CallbackQueryHandler(start, pattern="^restart$")],
     states={
         AMOUNT: [MessageHandler(filters.TEXT & ~filters.COMMAND, amount)],
         BANK: [MessageHandler(filters.TEXT & ~filters.COMMAND, bank)],
