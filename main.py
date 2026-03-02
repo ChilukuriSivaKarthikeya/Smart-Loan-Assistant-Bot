@@ -113,7 +113,7 @@ async def duration(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         "Please Select Option to Calculate",
-        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True,resize_keyboard=True,)
     )
 
     return EMI_CALC
@@ -121,7 +121,8 @@ async def duration(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def emi_calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
     choice = update.message.text
     amount = context.user_data['amount']
-    rate = context.user_data['interest_rate'] / 12 / 100
+    annual_rate = context.user_data['interest_rate']
+    monthly_rate = annual_rate / 12 / 100
     years = context.user_data['duration']
     months = years * 12
 
@@ -129,18 +130,18 @@ async def emi_calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if rate == 0:
             emi = amount / months
         else:
-            emi = (amount * rate * math.pow(1 + rate, months)) / (math.pow(1 + rate, months) - 1)
+            emi = (amount * monthly_rate * math.pow(1 + monthly_rate, months)) / (math.pow(1 + monthly_rate, months) - 1)
 
         await update.message.reply_text(
             f"Your EMI will be: ₹{emi:.2f} per month for {years} years."
         )
     elif choice=="Only Interest":
-        interest_only = amount * (rate / 100)
+        interest_only = amount * (annual_rate / 100)
         await update.message.reply_text(
         f"Yearly Interest Amount: ₹{interest_only:.2f}"
     )
     else:
-        total_payable = amount * (1 + (rate / 100) * years)
+        total_payable = amount * (1 + (annual_rate / 100) * years)
 
         await update.message.reply_text(
             f"Total payable amount after {years} years: ₹{total_payable:.2f}"
