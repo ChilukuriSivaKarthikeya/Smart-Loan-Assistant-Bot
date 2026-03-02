@@ -113,7 +113,7 @@ async def duration(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         "Please Select Option to Calculate",
-        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True,resize_keyboard=True,)
+        reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True,resize_keyboard=True,selective=True)
     )
 
     return EMI_CALC
@@ -126,8 +126,8 @@ async def emi_calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
     years = context.user_data['duration']
     months = years * 12
 
-    if choice == "EMI":
-        if rate == 0:
+    if choice=="EMI":
+        if monthly_rate == 0:
             emi = amount / months
         else:
             emi = (amount * monthly_rate * math.pow(1 + monthly_rate, months)) / (math.pow(1 + monthly_rate, months) - 1)
