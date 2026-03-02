@@ -98,18 +98,31 @@ async def duration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except ValueError:
         await update.message.reply_text("Please enter valid number of years.")
         return DURATION
-
+async def emi_calc(update: Update, context: CallbackContext) -> int:
+    choice = update.message.text
     amount = context.user_data['amount']
     rate = context.user_data['interest_rate'] / 12 / 100
+    years = context.user_data['duration']
     months = years * 12
-
-    if rate == 0:
-        emi = amount / months
+    
+    if choice == "Yes":
+        if rate == 0:
+            emi = amount / months
+        else:
+            emi = (amount * rate * math.pow(1 + rate, months)) / (math.pow(1 + rate, months) - 1)
+        await update.message.reply_text(f"Your EMI will be: ₹{emi:.2f} per month for {years} years.")
     else:
-        emi = (amount * rate * math.pow(1 + rate, months)) / (math.pow(1 + rate, months) - 1)
+        total_payable = amount * (1 + (context.user_data['interest_rate'] / 100) * years)
+        await update.message.reply_text(f"Total payable amount after {years} years: ₹{total_payable:.2f}")
 
-    await update.message.reply_text(f"Monthly EMI: ₹{emi:.2f}")
+    keyboard = [[InlineKeyboardButton("🚀 Calculate Another Loan", callback_data="start")]]
+    await update.message.reply_text(
+        "Would you like to check another loan?",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
     return ConversationHandler.END
+    
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Operation cancelled.")
@@ -125,6 +138,7 @@ conv_handler = ConversationHandler(
         LOAN_TYPE: [MessageHandler(filters.TEXT & ~filters.COMMAND, loan_type)],
         INTEREST_RATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, interest_rate)],
         DURATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, duration)],
+        EMI_CALC: [MessageHandler(filters.TEXT & ~filters.COMMAND, emi_calc)],
     },
     fallbacks=[CommandHandler("cancel", cancel)],
 )
