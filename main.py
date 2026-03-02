@@ -134,7 +134,7 @@ async def emi_calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"Your EMI will be: ₹{emi:.2f} per month for {years} years."
         )
-    elif choice="Only Interest":
+    elif choice=="Only Interest":
         interest_only = amount * (rate / 100)
         await update.message.reply_text(
         f"Yearly Interest Amount: ₹{interest_only:.2f}"
