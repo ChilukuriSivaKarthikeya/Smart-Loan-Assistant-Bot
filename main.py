@@ -8,7 +8,7 @@ import math
 import os
 
 # Define states
-AMOUNT, BANK, LOAN_TYPE, INTEREST_RATE, DURATION = range(5)
+AMOUNT, BANK, LOAN_TYPE, INTEREST_RATE, DURATION, EMI_CALC = range(6)
 
 # Bank Data
 BANKS = {
