@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
-    Application, CommandHandler, MessageHandler,
+    Application, CommandHandler, MessageHandler, CallbackQueryHandler,
     filters, ConversationHandler, ContextTypes
 )
 import math
